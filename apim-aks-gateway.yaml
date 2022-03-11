@@ -1,0 +1,75 @@
+# NOTE: Before deploying to a production environment, please review the documentation -> https://aka.ms/self-hosted-gateway-production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apim-aks-gateway-env
+data:
+  config.service.endpoint: "https://apim-dotnetconf22.management.azure-api.net/subscriptions/956b7f52-f044-412c-a0ad-90e5aa93daf0/resourceGroups/rg-dotnetconf22/providers/Microsoft.ApiManagement/service/apim-dotnetconf22?api-version=2021-01-01-preview"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apim-aks-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apim-aks-gateway
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 25%
+  template:
+    metadata:
+      labels:
+        app: apim-aks-gateway
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "apim-aks-gateway"
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: apim-aks-gateway
+        image: mcr.microsoft.com/azure-api-management/gateway:latest
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8081
+        readinessProbe:
+          httpGet:
+            path: /status-0123456789abcdef
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        env:
+        - name: config.service.auth
+          valueFrom:
+            secretKeyRef:
+              name: apim-aks-gateway-token
+              key: value
+        envFrom:
+        - configMapRef:
+            name: apim-aks-gateway-env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apim-aks-gateway
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
+    targetPort: 8081
+  selector:
+    app: apim-aks-gateway
