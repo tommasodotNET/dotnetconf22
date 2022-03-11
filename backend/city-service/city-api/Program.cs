@@ -38,6 +38,8 @@ app.MapGet("/cities/{city}", async (DaprClient daprClient, string city) =>
     return result;
 });
 
+app.MapGet("/probe", () => "Ok");
+
 
 app.Run();
 
