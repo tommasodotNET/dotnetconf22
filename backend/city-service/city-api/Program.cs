@@ -40,7 +40,6 @@ app.MapGet("/cities/{city}", async (DaprClient daprClient, string city) =>
 
 app.MapGet("/probe", () => "Ok");
 
-
 app.Run();
 
 internal class CityWeatherModel

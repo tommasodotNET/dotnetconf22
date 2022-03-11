@@ -15,6 +15,8 @@ app.MapGet("/weather/{city}", (string city) =>
     .ToArray();
 });
 
+app.MapGet("/probe", () => "Ok");
+
 app.Run();
 
 internal class WeatherForecast
