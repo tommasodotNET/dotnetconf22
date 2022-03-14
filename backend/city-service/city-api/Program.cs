@@ -9,8 +9,8 @@ app.MapGet("/cities", async (DaprClient daprClient) =>
 
     foreach(var city in cities)
     {
-        // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/"weather-service/method/weather/{city}");
-        var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-service", $"weather/{city}");
+        // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/weather-api/method/weather/{city}");
+        var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-api", $"weather/{city}");
         
         result.Add(new CityWeatherModel
         {
@@ -26,8 +26,8 @@ app.MapGet("/cities/{city}", async (DaprClient daprClient, string city) =>
 {
     var result = new List<CityWeatherModel>();
 
-    // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/"weather-service/method/weather/{city}");
-    var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-service", $"weather/{city}");
+    // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/weather-api/method/weather/{city}");
+    var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-api", $"weather/{city}");
     
     result.Add(new CityWeatherModel
     {
