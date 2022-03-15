@@ -1,54 +1,57 @@
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDaprClient();
+
 var app = builder.Build();
+
+var cities = new []{"Rome", "Milan", "Venice"};
 
 app.MapGet("/cities", async (DaprClient daprClient) => 
 {
-    var cities = new []{"Rome", "Milan", "Venice"};
-    var result = new List<CityWeatherModel>();
+    var result = new List<CityWeather>();
 
     foreach(var city in cities)
     {
         // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/weather-api/method/weather/{city}");
         var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-api", $"weather/{city}");
         
-        result.Add(new CityWeatherModel
+        result.Add(new CityWeather
         {
             City = city,
             Weather = weather
         });
     }
 
-    return result;
+    return Results.Ok(result);
 });
 
 app.MapGet("/cities/{city}", async (DaprClient daprClient, string city) => 
 {
-    var result = new List<CityWeatherModel>();
+    if(!cities.Contains(city))
+        return Results.NotFound();
+
+    var result = new List<CityWeather>();
 
     // SAME AS: var weather = await httpClient.GetAsync($"http://localhost:{Environment.GetEnvironmentVariable("DAPR_HTTP_PORT")}/v1.0/invoke/weather-api/method/weather/{city}");
     var weather = await daprClient.InvokeMethodAsync<List<WeatherForecast>>(HttpMethod.Get, "weather-api", $"weather/{city}");
     
-    result.Add(new CityWeatherModel
+    return Results.Ok(new CityWeather
     {
         City = city,
         Weather = weather
     });
-
-    return result;
 });
 
 app.MapGet("/probe", () => "Ok");
 
 app.Run();
 
-internal class CityWeatherModel
+internal class CityWeather
 {
     [JsonProperty("city")]
-    public string City { get; set; }
+    public string? City { get; set; }
 
     [JsonProperty("weather")]
-    public List<WeatherForecast> Weather { get; set; }
+    public List<WeatherForecast>? Weather { get; set; }
 }
 
 internal class WeatherForecast
@@ -60,5 +63,5 @@ internal class WeatherForecast
     public int TemperatureC { get; set; }
     
     [JsonProperty("summary")]
-    public string Summary { get; set; }
+    public string? Summary { get; set; }
 }
