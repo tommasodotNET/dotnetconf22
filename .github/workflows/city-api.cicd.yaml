@@ -18,7 +18,7 @@ jobs:
           path: main
 
       - name: Azure Login
-        uses: azure/actions/login@v1
+        uses: azure/login@v1.4.2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
