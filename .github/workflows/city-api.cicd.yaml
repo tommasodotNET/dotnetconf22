@@ -1,0 +1,50 @@
+name: City API CI/CD
+
+on:
+  push:
+    branches: 
+      [ main ]
+
+  workflow_dispatch:      
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build image
+        run: |
+          docker build -t ${{ secrets.AZURE_CONTAINER_REGISTRY }}/city-api:latest .
+
+      - name: Push image to Azure Container Registry
+        run: |
+          docker push ${{ secrets.AZURE_CONTAINER_REGISTRY }}/city-api:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+        with:
+          path: main
+          
+      - name: Merge AKS Context
+        uses: azure/aks-context@v1
+        with:
+          kubeconfig: ${{ secrets.AZURE_KUBECONFIG }}
+
+      - name: Deploy Helm Chart
+        run: |
+          helm upgrade --install city-chart ./backend/city-service/city-chart --namespace backend
