@@ -43,6 +43,12 @@ app.MapGet("/cities/{city}", async (DaprClient daprClient, string city) =>
 
 app.MapGet("/probe", () => "Ok");
 
+app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(origin => true) // allow any origin
+    .AllowCredentials()); // allow credentials
+
 app.Run();
 
 internal class CityWeather
